@@ -34,8 +34,9 @@ INSTALLED_APPS = [
     'chat',
     'account',
     # "django.contrib.staticfiles",
-    "graphene_django"
-    
+    "graphene_django",
+
+
     
 ]
 
@@ -121,3 +122,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'account.customUser'
+
+GRAPHENE = {
+    'SCHEMA' : 'account.schema.schema',
+}
