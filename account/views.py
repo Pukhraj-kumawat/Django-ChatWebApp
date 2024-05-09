@@ -4,7 +4,29 @@ from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from .serializers import UserSerializer
 from .models import customUser
-# Create your views here.
+import jwt,datetime
+from django.conf import settings
+
+
+
+def generate_jwt_token(customUser_id):
+    payload = {
+                'id':customUser_id,
+                'exp':datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+                'iat':datetime.datetime.utcnow()
+            }
+    jwt_token = jwt.encode(payload, settings.MYSECRETKEY, algorithm='HS256')
+    return jwt_token
+
+def verify_jwt_token(token):
+    try:
+        payload = jwt.decode(token, settings.MYSECRETKEY, algorithms=['HS256'])
+        return payload
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
 
 class RegisterView(APIView):
     def post(self,request):
@@ -12,20 +34,30 @@ class RegisterView(APIView):
             confirm_password = request.data.pop('confirm_password')
             serializer = UserSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
+            user = serializer.save()
+            jwt_token = generate_jwt_token(user.id)    
+            response = Response({'message': 'Registration successful and logged in'})
+            response.set_cookie('jwt_token', jwt_token, secure=True, httponly=True)
+            return response
         raise AuthenticationFailed('Registration failed')
     
 
 class LoginView(APIView):
     def post(self,request):
         # customUserInstance = customUser.objects.get(email = request.data["email"])
-        customUserInstance = customUser.objects.filter(email = request.data['email']).first()
-        if not customUserInstance:
+        userInstance = customUser.objects.filter(email = request.data['email']).first()
+        if not userInstance:
             raise AuthenticationFailed('User not found')
-        if customUserInstance and customUserInstance.check_password(request.data["password"]):
-            return Response({
-                'message':'success'
-            })
+        if userInstance and userInstance.check_password(request.data["password"]):            
+            jwt_token = generate_jwt_token(userInstance.id)            
+            response =  Response({'message':'logged In'})            
+            response.set_cookie('jwt_token',jwt_token,secure=True,httponly=True)            
+            return response            
         raise AuthenticationFailed('Password did not matched')
 
+
+class LogoutView(APIView):
+    def post(self,request):
+        response = Response({'message':'logged out'})
+        response.delete_cookie('jwt_token')
+        return response
