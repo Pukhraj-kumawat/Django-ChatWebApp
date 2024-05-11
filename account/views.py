@@ -8,10 +8,9 @@ import jwt,datetime
 from django.conf import settings
 
 
-
-def generate_jwt_token(customUser_id):
+def generate_jwt_token(user_id):
     payload = {
-                'id':customUser_id,
+                'id':user_id,
                 'exp':datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
                 'iat':datetime.datetime.utcnow()
             }
@@ -45,7 +44,7 @@ class RegisterView(APIView):
 class LoginView(APIView):
     def post(self,request):
         # customUserInstance = customUser.objects.get(email = request.data["email"])
-        userInstance = customUser.objects.filter(email = request.data['email']).first()
+        userInstance = customUser.objects.filter(username = request.data['username']).first()
         if not userInstance:
             raise AuthenticationFailed('User not found')
         if userInstance and userInstance.check_password(request.data["password"]):            
@@ -61,3 +60,4 @@ class LogoutView(APIView):
         response = Response({'message':'logged out'})
         response.delete_cookie('jwt_token')
         return response
+    

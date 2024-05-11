@@ -1,55 +1,60 @@
 from django.contrib import admin
-from . import models
+from .models import Message,Group
 
-# admin.site.register(models.Answer)
-# admin.site.register(models.Question)
-# admin.site.register(models.Quizzes)
-# admin.site.register(models.Category)
+admin.site.register(Message)
+admin.site.register(Group)
 
 
-@admin.register(models.Category)
 
-class CatAdmin(admin.ModelAdmin):
-	list_display = [
-        'name',
-        ]
+# # admin.site.register(models.Answer)
+# # admin.site.register(models.Question)
+# # admin.site.register(models.Quizzes)
+# # admin.site.register(models.Category)
 
-@admin.register(models.Quizzes)
 
-class QuizAdmin(admin.ModelAdmin):
-	list_display = [
-        'id', 
-        'title',
-        ]
+# @admin.register(models.Category)
 
-class AnswerInlineModel(admin.TabularInline):
-    model = models.Answer
-    fields = [
-        'answer_text', 
-        'is_right'
-        ]
+# class CatAdmin(admin.ModelAdmin):
+# 	list_display = [
+#         'name',
+#         ]
 
-@admin.register(models.Question)
+# @admin.register(models.Quizzes)
 
-class QuestionAdmin(admin.ModelAdmin):
-    fields = [
-        'title',
-        'quiz',
-        ]
-    list_display = [
-        'title', 
-        'quiz',
-        ]
-    inlines = [
-        AnswerInlineModel, 
-        ] 
+# class QuizAdmin(admin.ModelAdmin):
+# 	list_display = [
+#         'id', 
+#         'title',
+#         ]
 
-@admin.register(models.Answer)
+# class AnswerInlineModel(admin.TabularInline):
+#     model = models.Answer
+#     fields = [
+#         'answer_text', 
+#         'is_right'
+#         ]
 
-class AnswerAdmin(admin.ModelAdmin):
-    list_display = [
-        'answer_text', 
-        'is_right', 
-        'question'
-        ]
+# @admin.register(models.Question)
+
+# class QuestionAdmin(admin.ModelAdmin):
+#     fields = [
+#         'title',
+#         'quiz',
+#         ]
+#     list_display = [
+#         'title', 
+#         'quiz',
+#         ]
+#     inlines = [
+#         AnswerInlineModel, 
+#         ] 
+
+# @admin.register(models.Answer)
+
+# class AnswerAdmin(admin.ModelAdmin):
+#     list_display = [
+#         'answer_text', 
+#         'is_right', 
+#         'question'
+#         ]
 

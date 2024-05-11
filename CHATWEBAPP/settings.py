@@ -82,6 +82,16 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+if os.environ.get('USE_MYSQL_DB', False):
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'defaultdb',
+        'USER': 'avnadmin',
+        'PASSWORD': os.environ.get('MYSQL_DB_PASSWORD'),
+        'HOST': 'mysql-69f1c80-pukhrajkumawat1000-b9db.l.aivencloud.com',
+        'PORT': '14748',
+    }
+
 
 
 # Password validation

@@ -1,13 +1,18 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser,BaseUserManager
 from django.core.validators import RegexValidator
 
 
-class customUser(AbstractUser):    
-    email = models.EmailField(null=False,unique=True, 
-    validators=[RegexValidator(regex=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', message='Enter a valid email address.')])
-    username = None
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = []
+class customUser(AbstractUser):
+    mobile_no = models.CharField(
+        max_length=10,
+        unique=True,
+        validators=[RegexValidator(
+            regex='^(?!0)\d{10}$',
+            message='Mobile number is invalid'
+        )]
+    )
 
 
+class message(models.Model):
+    message_body = models.TextField(null=False,blank=False)
