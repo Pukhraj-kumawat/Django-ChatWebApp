@@ -19,7 +19,7 @@ SECRET_KEY = 'django-insecure-0z3q120pf=hu_dih0ryw%1m)jy(!2q6@=y!cl2oft3xo57yjo#
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 
@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     'account',
     # "django.contrib.staticfiles",
     "graphene_django",
-    'corsheaders'
+    # 'corsheaders'
 
 
     

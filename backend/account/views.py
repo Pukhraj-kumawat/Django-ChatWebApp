@@ -6,8 +6,21 @@ from .serializers import UserSerializer
 from .models import customUser
 import jwt,datetime
 from django.conf import settings
-from django.shortcuts import render
-from django.http import JsonResponse
+from django.shortcuts import render,redirect
+from django.http import JsonResponse,HttpResponse
+from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import APIException
+from rest_framework import status
+
+class UserNotFoundException(APIException):
+    status_code = status.HTTP_404_NOT_FOUND
+    default_detail = 'User not found'
+    default_code = 'user_not_found'
+
+class PasswordMismatchException(APIException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    default_detail = 'Password did not match'
+    default_code = 'password_mismatch'
 
 
 def generate_jwt_token(user_id):
@@ -31,31 +44,31 @@ def verify_jwt_token(token):
 
 class RegisterView(APIView):
     def post(self,request):
+        print(request.data)
         if(request.data["password"] == request.data["confirm_password"]):
             confirm_password = request.data.pop('confirm_password')
-            serializer = UserSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            user = serializer.save()
-            jwt_token = generate_jwt_token(user.id)    
-            response = Response({'message': 'Registration successful and logged in'})
-            response.set_cookie('jwt_token', jwt_token, secure=True, httponly=True)
-            return response
+            serializer = UserSerializer(data = request.data)                        
+            try:                    
+                serializer.is_valid(raise_exception=True) 
+            except ValidationError as e:
+                print(e)
+            user = serializer.save()  
+            
+            jwt_token = generate_jwt_token(user.id)               
+            return JsonResponse({'jwt_token': jwt_token})            
         raise AuthenticationFailed('Registration failed')
     
 
 class LoginView(APIView):
-    def post(self,request):
-        # customUserInstance = customUser.objects.get(email = request.data["email"])
-        userInstance = customUser.objects.filter(username = request.data['username']).first()
+    def post(self,request):          
+        userInstance = customUser.objects.filter(email = request.data['email']).first()
         if not userInstance:
-            raise AuthenticationFailed('User not found')
-        if userInstance and userInstance.check_password(request.data["password"]):            
-            jwt_token = generate_jwt_token(userInstance.id)            
-            response =  Response({'message':'logged In'})            
-            response.set_cookie('jwt_token',jwt_token,secure=True,httponly=True)            
-            return response            
-        raise AuthenticationFailed('Password did not matched')
-
+            raise UserNotFoundException()
+        if userInstance and userInstance.check_password(request.data["password"]):                        
+            jwt_token = generate_jwt_token(userInstance.id)                
+            return HttpResponse(jwt_token)
+        raise PasswordMismatchException()
+        
 
 class LogoutView(APIView):
     def post(self,request):
@@ -64,8 +77,13 @@ class LogoutView(APIView):
         return response
     
 
-def login(request):
-    return render(request,'account/home.html')
-
-def notFound(request):
-    return JsonResponse({"status":"not Found"})
+class HomeView(APIView):
+    def get(self,request):        
+        authorization_header = request.headers.get('Authorization')
+        if not authorization_header or not authorization_header.startswith('Bearer '):
+            raise AuthenticationFailed('Authorization header with Bearer token is missing')
+        jwt_token = authorization_header.split()[1]        
+        payload = verify_jwt_token(jwt_token)
+        if not payload:
+            raise AuthenticationFailed('Jwt token is not valid')    
+        return Response(payload)        

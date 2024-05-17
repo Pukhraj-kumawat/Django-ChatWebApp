@@ -40,7 +40,7 @@ class Query(graphene.ObjectType):
     
     def resolve_chat_messages(root,info,chat_user_id,your_user_id):
         cookies = info.context.COOKIES
-        print(info.context.headers)
+        # print(info.context.headers)
         jwt_token = cookies.get('jwt_token')
         print(jwt_token)
         chat_user = customUser.objects.get(id=chat_user_id)
