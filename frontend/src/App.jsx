@@ -1,22 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AuthPage from './components/auth'
 import Home from './components/home'
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes,Navigate } from 'react-router-dom';
 
 
 function App() {
-  const [count, setCount] = useState(0)
 
+const [jwtToken, setJwtToken] = useState(localStorage.getItem('jwt_token'));
+
+  useEffect(() => {
+    const token = localStorage.getItem('jwt_token');
+    if (token) {
+      setJwtToken(token);
+    }
+  }, []);
 
   return (
   <>
   
   <BrowserRouter>
-      <Routes>
-          <Route path="/home" element = {<Home />}></Route>
+      <Routes> 
+        {!jwtToken && (
+          <Route path="/*" element={<Navigate to="/" />} />
+        )}
 
-          <Route path="" element={<AuthPage />}></Route>
-        
+        {jwtToken ? (
+          <Route path="/" element = {<Home jwtToken = {jwtToken}/>}></Route>
+        ):(
+          <Route path="/" element={<AuthPage />}></Route>   
+        )}    
+                                
       </Routes>
   </BrowserRouter>
   

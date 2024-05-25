@@ -20,24 +20,28 @@ class GroupType(DjangoObjectType):
 class customUserType(DjangoObjectType):
     class Meta:
         model = customUser
-        fields = ("id","username","mobile_no")
+        fields = ("id","username","mobile_no","first_name","last_name","email")
 
 
 class Query(graphene.ObjectType):
-    all_messages = graphene.List(MessageType)
-    one_sender = graphene.Field(customUserType,id=graphene.Int())
-    one_recipient = graphene.Field(customUserType,id=graphene.Int())
-    chat_messages = graphene.List(MessageType,chat_user_id=graphene.Int(),your_user_id=graphene.Int())
-    
+
+    all_users = graphene.List(customUserType)
+    def resolve_all_users(root,info):
+        return customUser.objects.exclude(is_superuser=True)        
+
+    all_messages = graphene.List(MessageType)    
     def resolve_all_messages(root,info):
         return Message.objects.all()
     
+    one_sender = graphene.Field(customUserType,id=graphene.Int())
     def resolve_one_sender(root,info,id):
         return customUser.objects.get(id=id)
     
+    one_recipient = graphene.Field(customUserType,id=graphene.Int())
     def resolve_one_recipient(root,info,id):
         return customUser.objects.get(id=id)
     
+    chat_messages = graphene.List(MessageType,chat_user_id=graphene.Int(),your_user_id=graphene.Int())
     def resolve_chat_messages(root,info,chat_user_id,your_user_id):
         cookies = info.context.COOKIES
         # print(info.context.headers)
@@ -46,6 +50,8 @@ class Query(graphene.ObjectType):
         chat_user = customUser.objects.get(id=chat_user_id)
         your_user = customUser.objects.get(id=your_user_id)
         return Message.objects.filter(Q(Q(sender=chat_user) & Q(recipient=your_user)) | Q(Q(sender=your_user) & Q(recipient=chat_user)) )
+    
+
 
 
 schema = graphene.Schema(query=Query)

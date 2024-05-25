@@ -65,23 +65,13 @@ const handleSubmit = async (e) => {
         }
       )
 
-
       localStorage.setItem('jwt_token', response.data);
 
       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data}`;
 
-      if(response){
-        
-        try {          
-          const resp = await axios.get('http://127.0.0.1:8000/home')        
-        if(resp){   
-          navigate('/home',{ state: { data: resp.data } })          
-        }
-        } catch (error) {
-          console.log(error.response.status);
-        }        
-        
-      }  
+      navigate('/',{ state: { jwtToken: response.data } })                
+
+      window.location.reload();
 
     } catch (error) {          
 

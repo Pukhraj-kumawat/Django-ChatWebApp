@@ -1,12 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from .serializers import UserSerializer
 from .models import customUser
-import jwt,datetime
+import jwt,datetime,time
 from django.conf import settings
-from django.shortcuts import render,redirect
 from django.http import JsonResponse,HttpResponse
 from rest_framework.exceptions import ValidationError
 from rest_framework.exceptions import APIException
@@ -26,7 +25,7 @@ class PasswordMismatchException(APIException):
 def generate_jwt_token(user_id):
     payload = {
                 'id':user_id,
-                'exp':datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+                'exp':datetime.datetime.utcnow() + datetime.timedelta(days=1),
                 'iat':datetime.datetime.utcnow()
             }
     jwt_token = jwt.encode(payload, settings.MYSECRETKEY, algorithm='HS256')
@@ -44,7 +43,7 @@ def verify_jwt_token(token):
 
 class RegisterView(APIView):
     def post(self,request):
-        print(request.data)
+
         if(request.data["password"] == request.data["confirm_password"]):
             confirm_password = request.data.pop('confirm_password')
             serializer = UserSerializer(data = request.data)                        
@@ -78,12 +77,12 @@ class LogoutView(APIView):
     
 
 class HomeView(APIView):
-    def get(self,request):        
-        authorization_header = request.headers.get('Authorization')
-        if not authorization_header or not authorization_header.startswith('Bearer '):
-            raise AuthenticationFailed('Authorization header with Bearer token is missing')
-        jwt_token = authorization_header.split()[1]        
-        payload = verify_jwt_token(jwt_token)
-        if not payload:
-            raise AuthenticationFailed('Jwt token is not valid')    
+    def get(self,request):                
+        authorization_header = request.headers.get('Authorization')              
+        if not authorization_header or not authorization_header.startswith('Bearer '):            
+            return Response({'error': 'Token not present'}, status=status.HTTP_401_UNAUTHORIZED)            
+        jwt_token = authorization_header.split()[1]      
+        payload = verify_jwt_token(jwt_token)        
+        if not payload:                                   
+            return Response({'error': 'Token expired'}, status=status.HTTP_401_UNAUTHORIZED)            
         return Response(payload)        
