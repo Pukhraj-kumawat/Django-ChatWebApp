@@ -32,13 +32,21 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'chat',
     'account',
+    'channels',
     # "django.contrib.staticfiles",
     "graphene_django",
     # 'corsheaders'
 
-
-    
 ]
+
+ASGI_APPLICATION = 'CHATWEBAPP.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',  # Use appropriate backend
+    }
+}
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -149,3 +157,5 @@ GRAPHENE = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+

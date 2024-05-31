@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import AuthPage from './components/auth'
 import Home from './components/home'
 import { BrowserRouter, Route, Routes,Navigate } from 'react-router-dom';
-
+import WebSocketInstance from '../services/websocket';
 
 function App() {
 
@@ -14,6 +14,7 @@ const [jwtToken, setJwtToken] = useState(localStorage.getItem('jwt_token'));
       setJwtToken(token);
     }
   }, []);
+
 
   return (
   <>

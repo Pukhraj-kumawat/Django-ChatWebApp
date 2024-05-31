@@ -1,5 +1,5 @@
 #!/bin/sh
-'''exec' "/Users/pukhrajkumawat/Desktop/django projects/CHATWEBAPP/myenv/bin/python3.12" "$0" "$@"
+'''exec' "/Users/pukhrajkumawat/Desktop/django projects/CHATWEBAPP/backend/myenv/bin/python3.12" "$0" "$@"
 ' '''
 # -*- coding: utf-8 -*-
 import re

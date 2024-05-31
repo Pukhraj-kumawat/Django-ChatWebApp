@@ -10,6 +10,21 @@ from django.http import JsonResponse,HttpResponse
 from rest_framework.exceptions import ValidationError
 from rest_framework.exceptions import APIException
 from rest_framework import status
+from django.contrib.auth import login,logout,authenticate
+
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+def broadcast_message(message):
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        'broadcast_group',
+        {
+            'type': 'chat_message',
+            'message': message
+        }
+    )
+
 
 class UserNotFoundException(APIException):
     status_code = status.HTTP_404_NOT_FOUND
@@ -52,7 +67,7 @@ class RegisterView(APIView):
             except ValidationError as e:
                 print(e)
             user = serializer.save()  
-            
+            login(request,user)
             jwt_token = generate_jwt_token(user.id)               
             return JsonResponse({'jwt_token': jwt_token})            
         raise AuthenticationFailed('Registration failed')
@@ -63,7 +78,8 @@ class LoginView(APIView):
         userInstance = customUser.objects.filter(email = request.data['email']).first()
         if not userInstance:
             raise UserNotFoundException()
-        if userInstance and userInstance.check_password(request.data["password"]):                        
+        if userInstance and userInstance.check_password(request.data["password"]):   
+            login(request,userInstance)                     
             jwt_token = generate_jwt_token(userInstance.id)                
             return HttpResponse(jwt_token)
         raise PasswordMismatchException()
