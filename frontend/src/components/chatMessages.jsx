@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation } from "@apollo/client";
 import { GET_CHAT_MESSAGES, CREATE_CHAT_MESSAGE } from "../graphQL/queries";
+import { CgCornerUpLeft } from "react-icons/cg";
+
 
 const ChatMessages = (props) => {
   const [messages, setMessages] = useState(undefined);
   const [inputMessage, setInputMessage] = useState("");
   const chatContainerRef = useRef(null);
   const [state, setState] = useState(false);
-
-  const [webSocket,setWebSocket] = useState(undefined)
+  const [dateBreak,setDateBreak] = useState(false)
+  const [webSocket, setWebSocket] = useState(undefined);
 
   const { userId, chatUserId, chatUserFullName } = props.data;
 
@@ -31,7 +33,6 @@ const ChatMessages = (props) => {
   //   console.log(dataChatMessage.chatMessages);
   // }
 
-
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop =
@@ -50,18 +51,18 @@ const ChatMessages = (props) => {
 
   useEffect(() => {
     if (dataChatMessage) {
-      // console.log('look at',dataChatMessage.chatMessages)
       setMessages(dataChatMessage.chatMessages);
+      // console.log("updated messages", dataChatMessage.chatMessages);
     }
   }, [dataChatMessage]);
 
-  useEffect(()=>{
-    const ws = new WebSocket("ws://localhost:5000/ws/chat/");    
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:5000/ws/chat/");
     ws.onopen = () => {
       console.log("WebSocket connected");
     };
-    setWebSocket(ws)
-  },[])
+    setWebSocket(ws);
+  }, []);
 
   if (loadingChatMessage) return <div>Loading chat messages...</div>;
   if (errorChatMessage) return <div>Error in loading chat messages</div>;
@@ -70,8 +71,25 @@ const ChatMessages = (props) => {
     setInputMessage(event.target.value);
   }
 
-  
+  // const handleKeyDown = (e) => {
+  //   console.log(e.key);
+  //   if (e.key === 'Enter' && e.shiftKey) {
+  //     e.preventDefault();
+  //     setInputMessage(inputMessage + '\n');
+  //     console.log(inputMessage);
+  //   }}
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      if (e.shiftKey) {
+        e.preventDefault();
+        setInputMessage((prevMessage) => prevMessage + "\n");
+      } else {
+        e.preventDefault();
+        handleSendMessage(e);
+      }
+    }
+  };
 
   const handleSendMessage = async (e) => {
     // console.log(userId, chatUserId,inputMessage);
@@ -86,18 +104,20 @@ const ChatMessages = (props) => {
         },
       });
 
-      webSocket.send(JSON.stringify(dataCreatedMessage.data.createMessage.message));
+      webSocket.send(
+        JSON.stringify(dataCreatedMessage.data.createMessage.message)
+      );
 
       webSocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        data.message.chatUserId = Number(chatUserId);        
-        setMessages((prevMessages) => [...prevMessages, data.message]);        
+        data.message.chatUserId = Number(chatUserId);
+        // console.log('on message as : ',data.message);
+        setMessages((prevMessages) => [...prevMessages, data.message]);
         // webSocket.close();
       };
       webSocket.onclose = () => {
         console.log("WebSocket disconnected");
       };
-    
 
       setInputMessage("");
       // refetch()
@@ -119,27 +139,67 @@ const ChatMessages = (props) => {
         >
           {messages &&
             messages.map((message, index) => {
+            
               const timestamp = new Date(message.timestamp);
+
               const timeString = timestamp.toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
                 hour12: true,
               });
+              const dateString = timestamp.toLocaleDateString([], {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              });
+               
+              let prevDateString = null;
+              if(index !==0){
+                const prevTimeStamp = new Date(messages[index-1].timestamp)
+                prevDateString = prevTimeStamp.toLocaleDateString([],{
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })
+              }
+
               return (
                 <div key={index}>
+
+          {(index === 0 || dateString !== prevDateString) && (
+              <div className="flex items-center my-4">
+                <div className="flex-grow h-px bg-gray-300"></div>
+                <span className="px-4 font-semibold text-gray-500">{dateString}</span>
+                <div className="flex-grow h-px bg-gray-300"></div>
+              </div>
+            )}
+
                   {message.sender.id === chatUserId ? (
-                    <div className="flex justify-start p-2">
+                    <>
+                                        
+                    <div className="flex justify-start p-2 relative pl-8">
                       <div className="bg-green-100 py-1 px-3 rounded-lg max-w-xs shadow-md">
-                        <p>{message.content}</p>
+                        <p
+                          dangerouslySetInnerHTML={{
+                            __html: message.content.replace(/\n/g, "<br>"),
+                          }}
+                        ></p>                        
                         <small className="text-gray-500 block mt-1 text-left">
                           {timeString}
-                        </small>
+                        </small>                                                
                       </div>
+                      <div className="absolute bottom-5 left-0  m-2"><CgCornerUpLeft /></div>
                     </div>
+                    
+                    </>
                   ) : (
                     <div className="flex justify-end p-2">
                       <div className="bg-blue-100 py-1 px-3 rounded-lg max-w-xs shadow-md">
-                        <p>{message.content}</p>
+                        <p
+                          dangerouslySetInnerHTML={{
+                            __html: message.content.replace(/\n/g, "<br>"),
+                          }}
+                        ></p>
                         <small className="text-gray-500 block mt-1 text-right">
                           {timeString}
                         </small>
@@ -153,13 +213,16 @@ const ChatMessages = (props) => {
 
         <form onSubmit={handleSendMessage}>
           <div className="flex items-center p-4 border-t border-gray-300">
-            <input
+            <textarea
               type="text"
               placeholder="Type your message"
               value={inputMessage}
+              onKeyDown={handleKeyDown}
               onChange={handleMessageChange}
-              className="flex-grow p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+              className="flex-grow p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500  h-10"
             />
+
             <button className="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
               Send
             </button>

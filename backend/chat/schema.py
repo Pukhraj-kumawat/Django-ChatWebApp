@@ -5,6 +5,8 @@ from .models import Message,Group
 from account.models import customUser
 from django.db.models import Q
 from account.views import verify_jwt_token
+from datetime import datetime, timedelta
+
 
 class MessageType(DjangoObjectType):
     chat_user_id = graphene.Int()
@@ -56,11 +58,15 @@ class CreateMessage(graphene.Mutation):
     def mutate(self,info,input):
         sender = customUser.objects.get(id=int(input.sender))
         recipient = customUser.objects.get(id=int(input.recipient))
+        yesterday_timestamp = datetime.now() - timedelta(days=1)
         message = Message(
             sender=sender,
             recipient = recipient,
-            content = input.content
+            content = input.content,
+            timestamp = yesterday_timestamp
         )
+        
+
         message.save()
         return CreateMessage(message=message)        
 
