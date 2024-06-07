@@ -56,7 +56,7 @@ const ListUsers = (props) => {
       </div>
       
       {chatUserId &&(
-        <div className='border border-black-500 w-[600px] rounded-lg'>
+        <div className='border border-black-500 w-[730px] rounded-lg'>
           <ChatMessages data={{userId:userId,chatUserId:chatUserId,chatUserFullName:chatUserFullName,chatUsername:chatUsername}} />
         </div>
       )}    

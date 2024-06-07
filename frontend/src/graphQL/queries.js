@@ -17,6 +17,15 @@ export const GET_CHAT_MESSAGES = gql`
       timestamp
       isRead
       parent{
+        id
+        sender{
+          id
+          username          
+        }
+        recipient {
+          id
+          username
+        }
         content
         timestamp
       }

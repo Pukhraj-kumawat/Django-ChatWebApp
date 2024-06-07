@@ -30,9 +30,9 @@ const ChatMessages = (props) => {
     skip: !chatUserId,
   });
 
-  useEffect(()=>{
-    setReplyTo({id:""})
-  },[chatUserId])
+  useEffect(() => {
+    setReplyTo({ id: "" });
+  }, [chatUserId]);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -126,6 +126,7 @@ const ChatMessages = (props) => {
       content: messageContent,
       timeString: messageTimeString,
       replyToSender: true,
+      replyToRecipient:false
     });
   };
 
@@ -135,12 +136,13 @@ const ChatMessages = (props) => {
       content: messageContent,
       timeString: messageTimeString,
       replyToRecipient: true,
+      replyToSender: false,
     });
   };
 
   return (
     <>
-      <div className="flex flex-col w-[600px] h-[80vh] border border-gray-300 rounded-lg shadow-lg">
+      <div className="flex flex-col w-[730px] h-[80vh] border border-gray-300 rounded-lg shadow-lg">
         <div className="bg-gray-200 p-4 rounded-t-lg border-b border-gray-300">
           <h2 className="text-xl font-semibold">{chatUserFullName}</h2>
         </div>
@@ -190,16 +192,9 @@ const ChatMessages = (props) => {
                     <>
                       <div className="flex justify-start p-2 relative pl-8">
                         <div className="bg-green-100 py-1 px-3 rounded-lg max-w-xs shadow-md">
-                          <p
-                            dangerouslySetInnerHTML={{
-                              __html: message.content.replace(/\n/g, "<br>"),
-                            }}
-                          ></p>
-                          <small className="text-gray-500 block mt-1 text-left">
-                            {timeString}
-                          </small>
-                          {message.parent && (
-                            <div className="bg-blue-100 py-1 px-3 rounded-lg max-w-xs shadow-md mb-2">
+
+                        {message.parent && (
+                            <div className="bg-blue-100 py-1 px-3 rounded-lg max-w-xs shadow-md mb-2 -mx-3">
                               <p
                                 className="text-gray-700 text-sm"
                                 dangerouslySetInnerHTML={{
@@ -220,6 +215,17 @@ const ChatMessages = (props) => {
                               </small>
                             </div>
                           )}
+
+                          <p
+                            dangerouslySetInnerHTML={{
+                              __html: message.content.replace(/\n/g, "<br>"),
+                            }}
+                          ></p>
+                         
+
+                          <small className="text-gray-500 block mt-1 text-left">
+                            {timeString}
+                          </small>
                         </div>
                         <div
                           className="absolute bottom-5 left-0  m-2 hover:opacity-50"
@@ -238,17 +244,9 @@ const ChatMessages = (props) => {
                   ) : (
                     <div className="flex justify-end p-2 relative pr-8">
                       <div className="bg-blue-100 py-1 px-3 rounded-lg max-w-xs shadow-md">
-                        <p
-                          dangerouslySetInnerHTML={{
-                            __html: message.content.replace(/\n/g, "<br>"),
-                          }}
-                        ></p>
-                        <small className="text-gray-500 block mt-1 text-right">
-                          {timeString}
-                        </small>
 
-                        {message.parent && (
-                          <div className="bg-green-100 py-1 px-3 rounded-lg max-w-xs shadow-md mb-2">
+                      {message.parent && (
+                          <div className={`${message.sender.id !== message.parent.sender.id  ? ('bg-green-100 -mx-3'):('bg-blue-100 border border-gray-300')} py-1 px-3 rounded-lg max-w-xs shadow-md mb-2 -mx-3`}>
                             <p
                               className="text-gray-700 text-sm"
                               dangerouslySetInnerHTML={{
@@ -269,6 +267,17 @@ const ChatMessages = (props) => {
                             </small>
                           </div>
                         )}
+
+
+                        <p
+                          dangerouslySetInnerHTML={{
+                            __html: message.content.replace(/\n/g, "<br>"),
+                          }}
+                        ></p>
+                        
+                        <small className="text-gray-500 block mt-1 text-right">
+                          {timeString}
+                        </small>
                       </div>
                       <div
                         className="absolute bottom-5 right-0 m-2 hover:opacity-50"
