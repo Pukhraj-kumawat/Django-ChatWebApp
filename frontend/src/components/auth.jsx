@@ -102,21 +102,21 @@ const handleSubmit = async (e) => {
 
           {!isLogin && (
             <>
-              <TextInput inputId = 'first-name' inputName = 'first-name' inputType = 'text' inputPlaceholder ='First name' setState = {setFirstName} />
+              <TextInput inputId = 'first-name' inputName = 'first-name' inputType = 'text' inputPlaceholder ='First name' setState = {setFirstName} value = {firstName} />
 
-              <TextInput inputId = 'last-name' inputName = 'last-name' inputType = 'text' inputPlaceholder ='Last name' setState = {setLastName} />  
+              <TextInput inputId = 'last-name' inputName = 'last-name' inputType = 'text' inputPlaceholder ='Last name' setState = {setLastName} value = {lastName} />  
 
-              <TextInput inputId = 'mobile-no' inputName = 'mobile-no' inputType = 'text' inputPlaceholder ='Mobile number' setState = {setMobileNo} /> 
+              <TextInput inputId = 'mobile-no' inputName = 'mobile-no' inputType = 'text' inputPlaceholder ='Mobile number' setState = {setMobileNo} value = {mobileNo} /> 
 
             </>
           )}
 
-          <TextInput inputId = 'email' inputName = 'email' inputType = 'text' inputPlaceholder ='Email' setState = {setEmail} /> 
+          <TextInput inputId = 'email' inputName = 'email' inputType = 'text' inputPlaceholder ='Email' setState = {setEmail} value = {email}/> 
 
-            <TextInput inputId = 'password' inputName = 'password' inputType = 'password' inputPlaceholder ='Password' setState = {setPassword} /> 
+            <TextInput inputId = 'password' inputName = 'password' inputType = 'password' inputPlaceholder ='Password' setState = {setPassword} value = {password} /> 
 
             {!isLogin && (
-              <TextInput inputId = 'confirm-password' inputName = 'confirm-password' inputType = 'password' inputPlaceholder ='Confirm Password' setState = {setConfirmPassword} /> 
+              <TextInput inputId = 'confirm-password' inputName = 'confirm-password' inputType = 'password' inputPlaceholder ='Confirm Password' setState = {setConfirmPassword} value = {confirmPassword} /> 
             )}
 
           </div>

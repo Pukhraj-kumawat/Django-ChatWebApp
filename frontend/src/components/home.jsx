@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import ListUsers from "./listUsers";
-import { VscAccount } from "react-icons/vsc";
+import Profile from "./profile"
+
+
 
 const Home = (props) => {
   const randomNumber = Math.random();
@@ -53,14 +55,12 @@ const Home = (props) => {
     }
   }, [jwt_token]);
 
+
   return (
     <>
       <div className="relative h-screen">
-        <ListUsers data={{ userId: userId }} />
-
-        <div className="absolute top-5 right-10">
-          <VscAccount size={33} />
-        </div>
+        <ListUsers data={{ userId: userId }} />        
+       <Profile data = {{userId:userId}}/>
       </div>
     </>
   );

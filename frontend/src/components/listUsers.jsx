@@ -21,11 +21,14 @@ const ListUsers = (props) => {
   }
 
 
+
   const {loading:loadingAllUsers,error:errorAllUsers,data:dataAllUsers} = useQuery(GET_ALL_USERS,{
     variables:{
       yourUserId:Number(userId)
     }
   })
+
+
 
   if (loadingAllUsers) return <div>Loading all users ...</div>;
   if (errorAllUsers) return <div>Error in loading all users</div>;    

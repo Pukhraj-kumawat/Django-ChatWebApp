@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useMutation } from "@apollo/client";
 import { GET_CHAT_MESSAGES, CREATE_CHAT_MESSAGE } from "../graphQL/queries";
-import { CgCornerUpLeft } from "react-icons/cg";
-
+import { CgCornerUpLeft, CgCornerUpRight } from "react-icons/cg";
+import { RxCrossCircled } from "react-icons/rx";
 
 const ChatMessages = (props) => {
   const [messages, setMessages] = useState(undefined);
   const [inputMessage, setInputMessage] = useState("");
   const chatContainerRef = useRef(null);
   const [state, setState] = useState(false);
-  const [dateBreak,setDateBreak] = useState(false)
+  const [dateBreak, setDateBreak] = useState(false);
   const [webSocket, setWebSocket] = useState(undefined);
+  const [replyTo, setReplyTo] = useState({ id: "" });
 
   const { userId, chatUserId, chatUserFullName } = props.data;
 
@@ -29,9 +30,9 @@ const ChatMessages = (props) => {
     skip: !chatUserId,
   });
 
-  // if (dataChatMessage) {
-  //   console.log(dataChatMessage.chatMessages);
-  // }
+  useEffect(()=>{
+    setReplyTo({id:""})
+  },[chatUserId])
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -45,7 +46,7 @@ const ChatMessages = (props) => {
     {
       loading: loadingCreateMessage,
       error: errorCreateMessage,
-      data: dataCreateMessage,
+      data: dataCreatedMessage,
     },
   ] = useMutation(CREATE_CHAT_MESSAGE);
 
@@ -71,14 +72,6 @@ const ChatMessages = (props) => {
     setInputMessage(event.target.value);
   }
 
-  // const handleKeyDown = (e) => {
-  //   console.log(e.key);
-  //   if (e.key === 'Enter' && e.shiftKey) {
-  //     e.preventDefault();
-  //     setInputMessage(inputMessage + '\n');
-  //     console.log(inputMessage);
-  //   }}
-
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       if (e.shiftKey) {
@@ -92,8 +85,6 @@ const ChatMessages = (props) => {
   };
 
   const handleSendMessage = async (e) => {
-    // console.log(userId, chatUserId,inputMessage);
-
     e.preventDefault();
     try {
       const dataCreatedMessage = await createMessageMutate({
@@ -101,6 +92,7 @@ const ChatMessages = (props) => {
           senderUserId: Number(userId),
           recipientUserId: Number(chatUserId),
           content: inputMessage,
+          replyTo: replyTo.id,
         },
       });
 
@@ -111,7 +103,6 @@ const ChatMessages = (props) => {
       webSocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         data.message.chatUserId = Number(chatUserId);
-        // console.log('on message as : ',data.message);
         setMessages((prevMessages) => [...prevMessages, data.message]);
         // webSocket.close();
       };
@@ -120,10 +111,31 @@ const ChatMessages = (props) => {
       };
 
       setInputMessage("");
+      setReplyTo({ id: "" });
       // refetch()
     } catch (error) {
       console.log("Error:", error);
     }
+  };
+
+  console.log(messages);
+
+  const replyToSender = (messageId, messageContent, messageTimeString) => {
+    setReplyTo({
+      id: messageId,
+      content: messageContent,
+      timeString: messageTimeString,
+      replyToSender: true,
+    });
+  };
+
+  const replyToRecipient = (messageId, messageContent, messageTimeString) => {
+    setReplyTo({
+      id: messageId,
+      content: messageContent,
+      timeString: messageTimeString,
+      replyToRecipient: true,
+    });
   };
 
   return (
@@ -139,7 +151,6 @@ const ChatMessages = (props) => {
         >
           {messages &&
             messages.map((message, index) => {
-            
               const timestamp = new Date(message.timestamp);
 
               const timeString = timestamp.toLocaleTimeString([], {
@@ -152,48 +163,80 @@ const ChatMessages = (props) => {
                 month: "2-digit",
                 year: "numeric",
               });
-               
+
               let prevDateString = null;
-              if(index !==0){
-                const prevTimeStamp = new Date(messages[index-1].timestamp)
-                prevDateString = prevTimeStamp.toLocaleDateString([],{
+              if (index !== 0) {
+                const prevTimeStamp = new Date(messages[index - 1].timestamp);
+                prevDateString = prevTimeStamp.toLocaleDateString([], {
                   day: "2-digit",
                   month: "2-digit",
                   year: "numeric",
-                })
+                });
               }
 
               return (
                 <div key={index}>
-
-          {(index === 0 || dateString !== prevDateString) && (
-              <div className="flex items-center my-4">
-                <div className="flex-grow h-px bg-gray-300"></div>
-                <span className="px-4 font-semibold text-gray-500">{dateString}</span>
-                <div className="flex-grow h-px bg-gray-300"></div>
-              </div>
-            )}
+                  {(index === 0 || dateString !== prevDateString) && (
+                    <div className="flex items-center my-4">
+                      <div className="flex-grow h-px bg-gray-300"></div>
+                      <span className="px-4 font-semibold text-gray-500">
+                        {dateString}
+                      </span>
+                      <div className="flex-grow h-px bg-gray-300"></div>
+                    </div>
+                  )}
 
                   {message.sender.id === chatUserId ? (
                     <>
-                                        
-                    <div className="flex justify-start p-2 relative pl-8">
-                      <div className="bg-green-100 py-1 px-3 rounded-lg max-w-xs shadow-md">
-                        <p
-                          dangerouslySetInnerHTML={{
-                            __html: message.content.replace(/\n/g, "<br>"),
+                      <div className="flex justify-start p-2 relative pl-8">
+                        <div className="bg-green-100 py-1 px-3 rounded-lg max-w-xs shadow-md">
+                          <p
+                            dangerouslySetInnerHTML={{
+                              __html: message.content.replace(/\n/g, "<br>"),
+                            }}
+                          ></p>
+                          <small className="text-gray-500 block mt-1 text-left">
+                            {timeString}
+                          </small>
+                          {message.parent && (
+                            <div className="bg-blue-100 py-1 px-3 rounded-lg max-w-xs shadow-md mb-2">
+                              <p
+                                className="text-gray-700 text-sm"
+                                dangerouslySetInnerHTML={{
+                                  __html: message.parent.content.replace(
+                                    /\n/g,
+                                    "<br>"
+                                  ),
+                                }}
+                              ></p>
+                              <small className="text-gray-500 block mt-1 text-right">
+                                {new Date(
+                                  message.parent.timestamp
+                                ).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  hour12: true,
+                                })}
+                              </small>
+                            </div>
+                          )}
+                        </div>
+                        <div
+                          className="absolute bottom-5 left-0  m-2 hover:opacity-50"
+                          onClick={() => {
+                            replyToSender(
+                              message.id,
+                              message.content,
+                              timeString
+                            );
                           }}
-                        ></p>                        
-                        <small className="text-gray-500 block mt-1 text-left">
-                          {timeString}
-                        </small>                                                
+                        >
+                          <CgCornerUpLeft />
+                        </div>
                       </div>
-                      <div className="absolute bottom-5 left-0  m-2"><CgCornerUpLeft /></div>
-                    </div>
-                    
                     </>
                   ) : (
-                    <div className="flex justify-end p-2">
+                    <div className="flex justify-end p-2 relative pr-8">
                       <div className="bg-blue-100 py-1 px-3 rounded-lg max-w-xs shadow-md">
                         <p
                           dangerouslySetInnerHTML={{
@@ -203,6 +246,41 @@ const ChatMessages = (props) => {
                         <small className="text-gray-500 block mt-1 text-right">
                           {timeString}
                         </small>
+
+                        {message.parent && (
+                          <div className="bg-green-100 py-1 px-3 rounded-lg max-w-xs shadow-md mb-2">
+                            <p
+                              className="text-gray-700 text-sm"
+                              dangerouslySetInnerHTML={{
+                                __html: message.parent.content.replace(
+                                  /\n/g,
+                                  "<br>"
+                                ),
+                              }}
+                            ></p>
+                            <small className="text-gray-500 block mt-1 text-right">
+                              {new Date(
+                                message.parent.timestamp
+                              ).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                              })}
+                            </small>
+                          </div>
+                        )}
+                      </div>
+                      <div
+                        className="absolute bottom-5 right-0 m-2 hover:opacity-50"
+                        onClick={() => {
+                          replyToRecipient(
+                            message.id,
+                            message.content,
+                            timeString
+                          );
+                        }}
+                      >
+                        <CgCornerUpRight />
                       </div>
                     </div>
                   )}
@@ -212,6 +290,42 @@ const ChatMessages = (props) => {
         </div>
 
         <form onSubmit={handleSendMessage}>
+          {replyTo.id && (
+            <div className="bg-gray-100 mx-4 my-2 pb-2 px-2 pt-1 flex justify-between rounded-lg">
+              <div>
+                {replyTo.replyToSender ? (
+                  <>
+                    <CgCornerUpLeft />
+                    <div className="bg-green-100 py-1 px-3 rounded-lg max-w-xs shadow-md mt-4">
+                      <p>{replyTo.content}</p>
+                      <small className="text-gray-500 block mt-1 text-left">
+                        {replyTo.timeString}
+                      </small>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <CgCornerUpRight />
+                    <div className="bg-blue-100 py-1 px-3 rounded-lg max-w-xs shadow-md mt-4">
+                      <p>{replyTo.content}</p>
+                      <small className="text-gray-500 block mt-1 text-right">
+                        {replyTo.timeString}
+                      </small>
+                    </div>
+                  </>
+                )}
+              </div>
+              <div>
+                <RxCrossCircled
+                  className="hover:opacity-50"
+                  onClick={() => {
+                    setReplyTo({ id: "" });
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center p-4 border-t border-gray-300">
             <textarea
               type="text"

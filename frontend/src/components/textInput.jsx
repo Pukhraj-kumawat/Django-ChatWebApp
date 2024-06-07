@@ -3,6 +3,7 @@ import React from 'react'
   const TextInput = (props) => {    
 
     const {inputId,inputName,inputPlaceholder,inputType,value,setState} = props
+
     const handleChange =  (e) =>{
         setState(e.target.value)
     }
