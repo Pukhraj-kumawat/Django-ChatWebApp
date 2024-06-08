@@ -20,6 +20,9 @@ const Profile = (props) => {
   const [valueEmail, setValueEmail] = useState("");
   const [valueMobile, setValueMobile] = useState("");
 
+  const [isProfileChange, setIsProfileChange] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
   const nameRef = useRef(null);
   const emailRef = useRef(null);
   const mobileRef = useRef(null);
@@ -36,6 +39,11 @@ const Profile = (props) => {
   const handleProfileToggle = () => {
     setProfileToggle((prevToggle) => !prevToggle);
   };
+
+  const logoutClick = ()=>{
+    localStorage.removeItem("jwt_token");
+    window.location.reload();
+  }
 
   const handleOutsideClick = (event) => {
     if (!document.getElementById("profile-div").contains(event.target)) {
@@ -62,26 +70,31 @@ const Profile = (props) => {
 
     // console.log(userId,firstName,lastName,valueMobile,valueEmail);
 
-    try {        
-        const dataUpdatedProfile = await updateProfileMutate({variables:{
-            userId:Number(userId),
-            firstName:firstName,
-            lastName:lastName,
-            mobileNo:valueMobile,
-            email:valueEmail
-        }})
-        
-        console.log('Profile updated sucessfull :',dataUpdatedProfile);
-        
-        
+    try {
+      const dataUpdatedProfile = await updateProfileMutate({
+        variables: {
+          userId: Number(userId),
+          firstName: firstName,
+          lastName: lastName,
+          mobileNo: valueMobile,
+          email: valueEmail,
+        },
+      });
+
+      console.log("Profile updated sucessfull :", dataUpdatedProfile);
+      setIsSubmitted(true);
+
+      setTimeout(() => {
+        setIsSubmitted(false);
+        setIsProfileChange(false)
+      }, 2000);
+      
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error("Error updating profile:", error);
       if (error.networkError && error.networkError.result) {
-        console.error('Network error details:', error.networkError.result);
+        console.error("Network error details:", error.networkError.result);
       }
     }
-
-
   };
 
   useEffect(() => {
@@ -116,7 +129,6 @@ const Profile = (props) => {
   if (loadingUser) return <div>Loading all users ...</div>;
   if (errorUser) return <div>Error in loading all users</div>;
 
-
   return (
     <>
       <div className="absolute top-5 right-10" id="profile-div">
@@ -146,6 +158,11 @@ const Profile = (props) => {
                     </div>
                   </div>
 
+                  {isSubmitted && (
+                    <div className="top-0 inset-x-0 bg-green-500 text-white py-2 px-4 shadow-md text-center">
+                      <p>Profile has successfully updated!</p>
+                    </div>
+                  )}
                   {profileClick && profileToggle && (
                     <div className="bg-gray-100 flex items-center justify-center">
                       <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
@@ -160,6 +177,7 @@ const Profile = (props) => {
                             setState={setValueName}
                             value={valueName}
                             placeholder="e.g : John dea"
+                            setIsProfileChange={setIsProfileChange}
                           />
                           <EditableInput
                             label="Email"
@@ -171,6 +189,7 @@ const Profile = (props) => {
                             setState={setValueEmail}
                             value={valueEmail}
                             placeholder="e.g : johndea@gmai.com"
+                            setIsProfileChange={setIsProfileChange}
                           />
                           <EditableInput
                             label="Mobile Number"
@@ -182,11 +201,12 @@ const Profile = (props) => {
                             setState={setValueMobile}
                             value={valueMobile}
                             placeholder="e.g : 6376418758"
+                            setIsProfileChange={setIsProfileChange}
                           />
                           <div className="text-center">
                             <button
-                              type="submit"
-                              className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              type={isProfileChange ? "submit" : "button"}
+                              className={`bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 ${!isProfileChange && "opacity-60" } `}
                             >
                               Save Changes
                             </button>
@@ -200,7 +220,7 @@ const Profile = (props) => {
 
                   {!profileClick && (
                     <div className="py-2 px-4">
-                      <button className="text-gray-800 hover:text-gray-900 ml-2">
+                      <button className="text-gray-800 hover:text-gray-900 ml-2" onClick={logoutClick}>
                         Logout
                       </button>
                     </div>
@@ -211,7 +231,11 @@ const Profile = (props) => {
           </div>
 
           <div>
-            <VscAccount size={33} onClick={handleProfileToggle} className="hover:opacity-50" />
+            <VscAccount
+              size={33}
+              onClick={handleProfileToggle}
+              className="hover:opacity-50"
+            />
           </div>
         </div>
       </div>

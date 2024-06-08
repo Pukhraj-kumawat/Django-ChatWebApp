@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
 
-const EditableInput = ({ label, type, isEditable, setIsEditable, fieldRef, fieldName,setState,value,placeholder }) => {
+const EditableInput = ({ label, type, isEditable, setIsEditable, fieldRef, fieldName,setState,value,placeholder,setIsProfileChange }) => {
 
     const handleEditClick = () => {
         setIsEditable((prevState) => {
@@ -24,6 +24,7 @@ const EditableInput = ({ label, type, isEditable, setIsEditable, fieldRef, field
     };
 
     const handleChange = (e)=>{
+        setIsProfileChange(true)
         setState(e.target.value)
     }
 

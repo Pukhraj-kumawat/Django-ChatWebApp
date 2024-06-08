@@ -10,12 +10,14 @@ const ChatMessages = (props) => {
   const chatContainerRef = useRef(null);
   const [state, setState] = useState(false);
   const [dateBreak, setDateBreak] = useState(false);
-  const [webSocket, setWebSocket] = useState(undefined);
   const [replyTo, setReplyTo] = useState({ id: "" });
 
-  const { userId, chatUserId, chatUserFullName } = props.data;
+  const { userId, chatUserId, chatUserFullName, webSocket, SetNewMessage } =
+    props.data;
 
   // const memoizedInputMessage = useMemo(() => inputMessage, [inputMessage]);
+
+  console.log("chatUserId", chatUserId);
 
   const {
     loading: loadingChatMessage,
@@ -32,6 +34,7 @@ const ChatMessages = (props) => {
 
   useEffect(() => {
     setReplyTo({ id: "" });
+    refetch();
   }, [chatUserId]);
 
   useEffect(() => {
@@ -56,14 +59,6 @@ const ChatMessages = (props) => {
       // console.log("updated messages", dataChatMessage.chatMessages);
     }
   }, [dataChatMessage]);
-
-  useEffect(() => {
-    const ws = new WebSocket("ws://localhost:5000/ws/chat/");
-    ws.onopen = () => {
-      console.log("WebSocket connected");
-    };
-    setWebSocket(ws);
-  }, []);
 
   if (loadingChatMessage) return <div>Loading chat messages...</div>;
   if (errorChatMessage) return <div>Error in loading chat messages</div>;
@@ -100,16 +95,6 @@ const ChatMessages = (props) => {
         JSON.stringify(dataCreatedMessage.data.createMessage.message)
       );
 
-      webSocket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        data.message.chatUserId = Number(chatUserId);
-        setMessages((prevMessages) => [...prevMessages, data.message]);
-        // webSocket.close();
-      };
-      webSocket.onclose = () => {
-        console.log("WebSocket disconnected");
-      };
-
       setInputMessage("");
       setReplyTo({ id: "" });
       // refetch()
@@ -118,7 +103,17 @@ const ChatMessages = (props) => {
     }
   };
 
-  console.log(messages);
+  webSocket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    data.message.chatUserId = Number(chatUserId);
+    // console.log(data.message);
+    setMessages((prevMessages) => [...prevMessages, data.message]);
+    SetNewMessage({ sender: data.message.sender.username, count: 1 });
+    // webSocket.close();
+  };
+  webSocket.onclose = () => {
+    console.log("WebSocket disconnected");
+  };
 
   const replyToSender = (messageId, messageContent, messageTimeString) => {
     setReplyTo({
@@ -126,7 +121,7 @@ const ChatMessages = (props) => {
       content: messageContent,
       timeString: messageTimeString,
       replyToSender: true,
-      replyToRecipient:false
+      replyToRecipient: false,
     });
   };
 
@@ -178,22 +173,23 @@ const ChatMessages = (props) => {
 
               return (
                 <div key={index}>
-                  {(index === 0 || dateString !== prevDateString) && (
-                    <div className="flex items-center my-4">
-                      <div className="flex-grow h-px bg-gray-300"></div>
-                      <span className="px-4 font-semibold text-gray-500">
-                        {dateString}
-                      </span>
-                      <div className="flex-grow h-px bg-gray-300"></div>
-                    </div>
-                  )}
+                  {(index === 0 || dateString !== prevDateString) &&
+                    (message.sender.id == chatUserId ||
+                      message.sender.id == userId) && (
+                      <div className="flex items-center my-4">
+                        <div className="flex-grow h-px bg-gray-300"></div>
+                        <span className="px-4 font-semibold text-gray-500">
+                          {dateString}
+                        </span>
+                        <div className="flex-grow h-px bg-gray-300"></div>
+                      </div>
+                    )}
 
-                  {message.sender.id === chatUserId ? (
+                  {message.sender.id == chatUserId && (
                     <>
                       <div className="flex justify-start p-2 relative pl-8">
                         <div className="bg-green-100 py-1 px-3 rounded-lg max-w-xs shadow-md">
-
-                        {message.parent && (
+                          {message.parent && (
                             <div className="bg-blue-100 py-1 px-3 rounded-lg max-w-xs shadow-md mb-2 -mx-3">
                               <p
                                 className="text-gray-700 text-sm"
@@ -221,7 +217,6 @@ const ChatMessages = (props) => {
                               __html: message.content.replace(/\n/g, "<br>"),
                             }}
                           ></p>
-                         
 
                           <small className="text-gray-500 block mt-1 text-left">
                             {timeString}
@@ -241,12 +236,19 @@ const ChatMessages = (props) => {
                         </div>
                       </div>
                     </>
-                  ) : (
+                  )}
+
+                  {message.sender.id == userId && (
                     <div className="flex justify-end p-2 relative pr-8">
                       <div className="bg-blue-100 py-1 px-3 rounded-lg max-w-xs shadow-md">
-
-                      {message.parent && (
-                          <div className={`${message.sender.id !== message.parent.sender.id  ? ('bg-green-100 -mx-3'):('bg-blue-100 border border-gray-300')} py-1 px-3 rounded-lg max-w-xs shadow-md mb-2 -mx-3`}>
+                        {message.parent && (
+                          <div
+                            className={`${
+                              message.sender.id !== message.parent.sender.id
+                                ? "bg-green-100 -mx-3"
+                                : "bg-blue-100 border border-gray-300"
+                            } py-1 px-3 rounded-lg max-w-xs shadow-md mb-2 -mx-3`}
+                          >
                             <p
                               className="text-gray-700 text-sm"
                               dangerouslySetInnerHTML={{
@@ -268,13 +270,12 @@ const ChatMessages = (props) => {
                           </div>
                         )}
 
-
                         <p
                           dangerouslySetInnerHTML={{
                             __html: message.content.replace(/\n/g, "<br>"),
                           }}
                         ></p>
-                        
+
                         <small className="text-gray-500 block mt-1 text-right">
                           {timeString}
                         </small>

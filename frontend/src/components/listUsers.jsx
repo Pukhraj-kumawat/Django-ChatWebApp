@@ -1,73 +1,112 @@
-import React, { useEffect, useState } from 'react';
-import { GET_ALL_USERS } from '../graphQL/queries';
-import { useQuery } from '@apollo/client';
-import ChatMessages from './chatMessages';
-
+import React, { useEffect, useState } from "react";
+import { GET_ALL_USERS } from "../graphQL/queries";
+import { useQuery } from "@apollo/client";
+import ChatMessages from "./chatMessages";
 
 const ListUsers = (props) => {
-  const {userId} = props.data;
-  const [chatUserId,setChatUserId] = useState(undefined);
-  const [chatUserFullName,setChatUserFullName] = useState(undefined)
-  const [chatUsername,setChatUsername] = useState(undefined);
+  const { userId } = props.data;
+  const [chatUserFullName, setChatUserFullName] = useState(undefined);
+  const [chatUsername, setChatUsername] = useState(undefined);
   const [selectedDivId, setSelectedDivId] = useState(null);
+  const [webSocket, setWebSocket] = useState(undefined);
+  const [newMessage, SetNewMessage] = useState({sender:"",count:0});
 
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:5000/ws/chat/");
+    ws.onopen = () => {
+      console.log("WebSocket connected");
+    };
+    setWebSocket(ws);
+  }, []);
 
-  const clickUser = (event,chatUserId)=>{   
-    setChatUserFullName(event.currentTarget.querySelector('.chat-user-name').textContent);
-    setChatUsername(event.currentTarget.querySelector('.chat-username').textContent);
-    setChatUserId(chatUserId);    
-    setSelectedDivId(chatUserId)
+  const storedChatUserId = localStorage.getItem("chatUserId");
+  const storedChatUserFullName = localStorage.getItem("chatUserFullName");
+  const storedChatUsername = localStorage.getItem("chatUsername");
 
-  }
+  const clickUser = (event, chatUserId) => {
+    localStorage.setItem(
+      "chatUserFullName",
+      event.currentTarget.querySelector(".chat-user-name").textContent
+    );
+    localStorage.setItem(
+      "chatUsername",
+      event.currentTarget.querySelector(".chat-username").textContent
+    );
+    localStorage.setItem("chatUserId", chatUserId);
+    setSelectedDivId(chatUserId);
+  };
 
-
-
-  const {loading:loadingAllUsers,error:errorAllUsers,data:dataAllUsers} = useQuery(GET_ALL_USERS,{
-    variables:{
-      yourUserId:Number(userId)
-    }
-  })
-
-
+  const {
+    loading: loadingAllUsers,
+    error: errorAllUsers,
+    data: dataAllUsers,
+  } = useQuery(GET_ALL_USERS, {
+    variables: {
+      yourUserId: Number(userId),
+    },
+  });
 
   if (loadingAllUsers) return <div>Loading all users ...</div>;
-  if (errorAllUsers) return <div>Error in loading all users</div>;    
+  if (errorAllUsers) return <div>Error in loading all users</div>;
 
-
-  if(dataAllUsers){
-  return (
-    <>    
-    <div className='flex space-x-4 fixed top-4 left-4'>            
-      <div className="flex flex-col space-y-2 w-[300px] cursor-pointer select-none ">
-        {dataAllUsers.allUsers.map(user => (
-
-          <div key={user.id} className={`p-2 rounded-lg shadow-md flex items-center cursor-pointer hover:bg-blue-50 active:scale-95 transition transform duration-75 ${selectedDivId === user.id ? 'bg-green-200' : 'bg-gray-100'} `} id={`${user.id}`} onClick={(event)=>{clickUser(event,user.id)}}>
-            {/* <img
+  if (dataAllUsers) {
+    return (
+      <>
+        <div className="flex space-x-4 fixed top-4 left-4">
+          <div className="flex flex-col space-y-2 w-[300px] cursor-pointer select-none ">
+            {dataAllUsers.allUsers.map((user) => (
+              <div
+                key={user.id}
+                className={`p-2 rounded-lg shadow-md flex items-center cursor-pointer hover:bg-blue-50 active:scale-95 transition transform duration-75 ${
+                  (selectedDivId === user.id) | (storedChatUserId === user.id)
+                    ? "bg-green-200"
+                    : "bg-gray-100"
+                } `}
+                id={`${user.id}`}
+                onClick={(event) => {
+                  clickUser(event, user.id);
+                }}
+              >
+                {/* <img
               src={`https://source.unsplash.com/50x50/?person&${user.id}`}
               alt={user.firstName}
               className="w-10 h-10 rounded-full mr-4"
             /> */}
-            <div>
-              <p className="font-semibold chat-user-name">{user.firstName} {user.lastName}</p>
-              <small className="text-gray-600 chat-username">@{user.username}</small>
-            </div>
+                <div>
+                  <p className="font-semibold chat-user-name">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <small className="text-gray-600 chat-username">
+                    @{user.username}
+                  </small>
+                </div>
+                {(newMessage.count == 1 && newMessage.username == user.username ) && (
+                  <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white font-semibold rounded-full w-5 h-5 flex items-center justify-center">
+                    1
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      
-      {chatUserId &&(
-        <div className='border border-black-500 w-[730px] rounded-lg'>
-          <ChatMessages data={{userId:userId,chatUserId:chatUserId,chatUserFullName:chatUserFullName,chatUsername:chatUsername}} />
+
+          {storedChatUserId && (
+            <div className="border border-black-500 w-[730px] rounded-lg">
+              <ChatMessages
+                data={{
+                  userId: userId,
+                  chatUserId: storedChatUserId,
+                  chatUserFullName: storedChatUserFullName,
+                  chatUsername: storedChatUsername,
+                  webSocket: webSocket,
+                  SetNewMessage: SetNewMessage,
+                }}
+              />
+            </div>
+          )}
         </div>
-      )}    
-      
+      </>
+    );
+  }
+};
 
-    </div>
-    </>
-  )
-}
-
-  
-}
-
-export default ListUsers
+export default ListUsers;
