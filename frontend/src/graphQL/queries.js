@@ -53,6 +53,7 @@ export const GET_ALL_USERS = gql`
       lastName
       username
       mobileNo
+      profilePicture
     }
   }
 `;

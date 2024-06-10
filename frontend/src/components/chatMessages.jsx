@@ -30,8 +30,6 @@ const ChatMessages = (props) => {
     skip: !chatUserId,
   });
 
-
-
   useEffect(() => {
     if (chatUserId) {  
       setReplyTo({ id: "" });
@@ -41,13 +39,6 @@ const ChatMessages = (props) => {
       });
     }
   }, [chatUserId]);
-
-// useEffect(()=>{
-//   setNewMessage((prevList) => {
-//     return prevList.filter((ob) => ob.sender != chatUserId);
-//   });
-// },[newMessage])
-
 
   useEffect(() => {
     if (chatContainerRef.current) {

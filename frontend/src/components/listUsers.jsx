@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 import { GET_ALL_USERS } from "../graphQL/queries";
 import { useQuery } from "@apollo/client";
 import ChatMessages from "./chatMessages";
+import { VscAccount } from "react-icons/vsc";
 
 const ListUsers = (props) => {
-  const { userId } = props.data;  
+  const { userId } = props.data;
   const [selectedDivId, setSelectedDivId] = useState(null);
   const [webSocket, setWebSocket] = useState(undefined);
-  const [newMessage, setNewMessage] = useState(()=>{
-    const storedNewMessage = localStorage.getItem('newMessage');
+  const [newMessage, setNewMessage] = useState(() => {
+    const storedNewMessage = localStorage.getItem("newMessage");
     return storedNewMessage ? JSON.parse(storedNewMessage) : [];
   });
 
@@ -20,9 +21,9 @@ const ListUsers = (props) => {
     setWebSocket(ws);
   }, []);
 
-  useEffect(()=>{
-    localStorage.setItem('newMessage', JSON.stringify(newMessage));
-  },[newMessage])
+  useEffect(() => {
+    localStorage.setItem("newMessage", JSON.stringify(newMessage));
+  }, [newMessage]);
 
   const storedChatUserId = localStorage.getItem("chatUserId");
   const storedChatUserFullName = localStorage.getItem("chatUserFullName");
@@ -72,11 +73,16 @@ const ListUsers = (props) => {
                   clickUser(event, user.id);
                 }}
               >
-                {/* <img
-              src={`https://source.unsplash.com/50x50/?person&${user.id}`}
-              alt={user.firstName}
-              className="w-10 h-10 rounded-full mr-4"
-            /> */}
+                {user.profilePicture ? (
+                  <>
+                  {/* Handle when user has profile picture */}
+                  </>
+                ) : (
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center mr-2">
+                    <VscAccount size={40} className="hover:opacity-50" />
+                  </div>
+                )}
+
                 <div>
                   <p className="font-semibold chat-user-name">
                     {user.firstName} {user.lastName}
@@ -86,10 +92,10 @@ const ListUsers = (props) => {
                   </small>
                 </div>
 
-                {newMessage.map((ob,index) => {
+                {newMessage.map((ob, index) => {
                   return (
-                    <div key={index+0.5}>                      
-                      {(ob.sender == user.id && ob.recipient == userId ) && (
+                    <div key={index + 0.5}>
+                      {ob.sender == user.id && ob.recipient == userId && (
                         <span className="absolute top-3 right-3 -mt-1 -mr-1 bg-red-500 text-white font-semibold rounded-full w-5 h-5 flex items-center justify-center">
                           {ob.count}
                         </span>
@@ -111,7 +117,7 @@ const ListUsers = (props) => {
                   chatUsername: storedChatUsername,
                   webSocket: webSocket,
                   setNewMessage: setNewMessage,
-                  newMessage:newMessage
+                  newMessage: newMessage,
                 }}
               />
             </div>

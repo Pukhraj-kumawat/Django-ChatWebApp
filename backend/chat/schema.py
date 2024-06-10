@@ -28,7 +28,7 @@ class GroupType(DjangoObjectType):
 class customUserType(DjangoObjectType):
     class Meta:
         model = customUser
-        fields = ("id","username","mobile_no","first_name","last_name","email")
+        fields = ("id","username","mobile_no","first_name","last_name","email","profile_picture")
 
 
 

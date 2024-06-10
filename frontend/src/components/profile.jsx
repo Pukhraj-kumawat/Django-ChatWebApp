@@ -40,14 +40,14 @@ const Profile = (props) => {
     setProfileToggle((prevToggle) => !prevToggle);
   };
 
-  const logoutClick = ()=>{
+  const logoutClick = () => {
     localStorage.removeItem("jwt_token");
-    localStorage.removeItem("chatUserId")
-    localStorage.removeItem("chatUserFullName")
-    localStorage.removeItem("newMessage")
-    localStorage.removeItem("chatUsername")
+    localStorage.removeItem("chatUserId");
+    localStorage.removeItem("chatUserFullName");
+    localStorage.removeItem("newMessage");
+    localStorage.removeItem("chatUsername");
     window.location.reload();
-  }
+  };
 
   const handleOutsideClick = (event) => {
     if (!document.getElementById("profile-div").contains(event.target)) {
@@ -86,14 +86,13 @@ const Profile = (props) => {
       });
 
       console.log("Profile updated sucessfull :", dataUpdatedProfile);
-      refetch()
+      refetch();
       setIsSubmitted(true);
 
       setTimeout(() => {
         setIsSubmitted(false);
-        setIsProfileChange(false)
+        setIsProfileChange(false);
       }, 2000);
-      
     } catch (error) {
       console.error("Error updating profile:", error);
       if (error.networkError && error.networkError.result) {
@@ -117,7 +116,7 @@ const Profile = (props) => {
     loading: loadingUser,
     error: errorUser,
     data: dataUser,
-    refetch
+    refetch,
   } = useQuery(GET_USER, {
     variables: {
       userId: Number(userId),
@@ -158,8 +157,10 @@ const Profile = (props) => {
                       </small>
                     </div>
                     <div className=" mr-2 mt-2 mb-2">
-                      <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 ">
-                        {/* <img src={imageUrl} alt="Profile" className="w-full h-full object-cover" /> */}
+                      <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                        <VscAccount
+                          size={100}                          
+                        />
                       </div>
                     </div>
                   </div>
@@ -212,7 +213,9 @@ const Profile = (props) => {
                           <div className="text-center">
                             <button
                               type={isProfileChange ? "submit" : "button"}
-                              className={`bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 ${!isProfileChange && "opacity-60" } `}
+                              className={`bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                !isProfileChange && "opacity-60"
+                              } `}
                             >
                               Save Changes
                             </button>
@@ -225,8 +228,11 @@ const Profile = (props) => {
                   <hr />
 
                   {!profileClick && (
-                    <div className="py-2 px-4">
-                      <button className="text-gray-800 hover:text-gray-900 ml-2" onClick={logoutClick}>
+                    <div className="py-2 px-4 hover:opacity-50">
+                      <button
+                        className="text-gray-800 hover:text-gray-900 ml-2"
+                        onClick={logoutClick}
+                      >
                         Logout
                       </button>
                     </div>

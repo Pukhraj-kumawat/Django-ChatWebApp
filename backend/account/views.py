@@ -81,7 +81,7 @@ class LoginView(APIView):
         if userInstance and userInstance.check_password(request.data["password"]):   
             login(request,userInstance)                     
             jwt_token = generate_jwt_token(userInstance.id)                            
-            return HttpResponse(jwt_token)
+            return JsonResponse({'jwt_token': jwt_token})            
         raise PasswordMismatchException()
         
 

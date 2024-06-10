@@ -64,9 +64,7 @@ const handleSubmit = async (e) => {
           },
           withCredentials: true
         }
-      )
-
-      console.log('jwt token',response.data);
+      )  
 
       localStorage.setItem('jwt_token', response.data.jwt_token);
 
