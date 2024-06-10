@@ -42,6 +42,10 @@ const Profile = (props) => {
 
   const logoutClick = ()=>{
     localStorage.removeItem("jwt_token");
+    localStorage.removeItem("chatUserId")
+    localStorage.removeItem("chatUserFullName")
+    localStorage.removeItem("newMessage")
+    localStorage.removeItem("chatUsername")
     window.location.reload();
   }
 
@@ -82,6 +86,7 @@ const Profile = (props) => {
       });
 
       console.log("Profile updated sucessfull :", dataUpdatedProfile);
+      refetch()
       setIsSubmitted(true);
 
       setTimeout(() => {
@@ -112,6 +117,7 @@ const Profile = (props) => {
     loading: loadingUser,
     error: errorUser,
     data: dataUser,
+    refetch
   } = useQuery(GET_USER, {
     variables: {
       userId: Number(userId),

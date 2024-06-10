@@ -4,12 +4,13 @@ import { useQuery } from "@apollo/client";
 import ChatMessages from "./chatMessages";
 
 const ListUsers = (props) => {
-  const { userId } = props.data;
-  const [chatUserFullName, setChatUserFullName] = useState(undefined);
-  const [chatUsername, setChatUsername] = useState(undefined);
+  const { userId } = props.data;  
   const [selectedDivId, setSelectedDivId] = useState(null);
   const [webSocket, setWebSocket] = useState(undefined);
-  const [newMessage, SetNewMessage] = useState({sender:"",count:0});
+  const [newMessage, setNewMessage] = useState(()=>{
+    const storedNewMessage = localStorage.getItem('newMessage');
+    return storedNewMessage ? JSON.parse(storedNewMessage) : [];
+  });
 
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:5000/ws/chat/");
@@ -18,6 +19,10 @@ const ListUsers = (props) => {
     };
     setWebSocket(ws);
   }, []);
+
+  useEffect(()=>{
+    localStorage.setItem('newMessage', JSON.stringify(newMessage));
+  },[newMessage])
 
   const storedChatUserId = localStorage.getItem("chatUserId");
   const storedChatUserFullName = localStorage.getItem("chatUserFullName");
@@ -80,11 +85,18 @@ const ListUsers = (props) => {
                     @{user.username}
                   </small>
                 </div>
-                {(newMessage.count == 1 && newMessage.username == user.username ) && (
-                  <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white font-semibold rounded-full w-5 h-5 flex items-center justify-center">
-                    1
-                  </span>
-                )}
+
+                {newMessage.map((ob,index) => {
+                  return (
+                    <div key={index+0.5}>                      
+                      {(ob.sender == user.id && ob.recipient == userId ) && (
+                        <span className="absolute top-3 right-3 -mt-1 -mr-1 bg-red-500 text-white font-semibold rounded-full w-5 h-5 flex items-center justify-center">
+                          {ob.count}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ))}
           </div>
@@ -98,7 +110,8 @@ const ListUsers = (props) => {
                   chatUserFullName: storedChatUserFullName,
                   chatUsername: storedChatUsername,
                   webSocket: webSocket,
-                  SetNewMessage: SetNewMessage,
+                  setNewMessage: setNewMessage,
+                  newMessage:newMessage
                 }}
               />
             </div>

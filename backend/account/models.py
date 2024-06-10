@@ -15,5 +15,3 @@ class customUser(AbstractUser):
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
 
 
-class message(models.Model):
-    message_body = models.TextField(null=False,blank=False)

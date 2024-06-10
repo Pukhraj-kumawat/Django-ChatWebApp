@@ -12,12 +12,10 @@ const ChatMessages = (props) => {
   const [dateBreak, setDateBreak] = useState(false);
   const [replyTo, setReplyTo] = useState({ id: "" });
 
-  const { userId, chatUserId, chatUserFullName, webSocket, SetNewMessage } =
+  const { userId, chatUserId, chatUserFullName, webSocket, setNewMessage,newMessage } =
     props.data;
 
   // const memoizedInputMessage = useMemo(() => inputMessage, [inputMessage]);
-
-  console.log("chatUserId", chatUserId);
 
   const {
     loading: loadingChatMessage,
@@ -32,10 +30,24 @@ const ChatMessages = (props) => {
     skip: !chatUserId,
   });
 
+
+
   useEffect(() => {
-    setReplyTo({ id: "" });
-    refetch();
+    if (chatUserId) {  
+      setReplyTo({ id: "" });
+      refetch();
+      setNewMessage((prevList) => {
+        return prevList.filter((ob) => ob.sender != chatUserId);
+      });
+    }
   }, [chatUserId]);
+
+// useEffect(()=>{
+//   setNewMessage((prevList) => {
+//     return prevList.filter((ob) => ob.sender != chatUserId);
+//   });
+// },[newMessage])
+
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -56,7 +68,6 @@ const ChatMessages = (props) => {
   useEffect(() => {
     if (dataChatMessage) {
       setMessages(dataChatMessage.chatMessages);
-      // console.log("updated messages", dataChatMessage.chatMessages);
     }
   }, [dataChatMessage]);
 
@@ -78,6 +89,7 @@ const ChatMessages = (props) => {
       }
     }
   };
+
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -106,9 +118,35 @@ const ChatMessages = (props) => {
   webSocket.onmessage = (event) => {
     const data = JSON.parse(event.data);
     data.message.chatUserId = Number(chatUserId);
-    // console.log(data.message);
+    console.log(data.message);
     setMessages((prevMessages) => [...prevMessages, data.message]);
-    SetNewMessage({ sender: data.message.sender.username, count: 1 });
+        
+    if(!(data.message.sender.id == chatUserId)){      
+      setNewMessage((prevList) => {
+        const existingSender = prevList.find(
+          (ob) =>
+            ob.sender == data.message.sender.id &&
+            ob.recipient == data.message.recipient.id
+        );
+        if (existingSender) {
+          return prevList.map((ob) =>
+            ob.sender == data.message.sender.id
+              ? { ...ob, count: ob.count + 1 }
+              : ob
+          );
+        } else {
+          return [
+            ...prevList,
+            {
+              sender: data.message.sender.id,
+              recipient: data.message.recipient.id,
+              count: 1,
+            },
+          ];
+        }
+      });
+    }
+    
     // webSocket.close();
   };
   webSocket.onclose = () => {
@@ -185,12 +223,72 @@ const ChatMessages = (props) => {
                       </div>
                     )}
 
-                  {message.sender.id == chatUserId && (
-                    <>
-                      <div className="flex justify-start p-2 relative pl-8">
-                        <div className="bg-green-100 py-1 px-3 rounded-lg max-w-xs shadow-md">
+                  {message.sender.id == chatUserId &&
+                    message.recipient.id == userId && (
+                      <>
+                        <div className="flex justify-start p-2 relative pl-8">
+                          <div className="bg-green-100 py-1 px-3 rounded-lg max-w-xs shadow-md">
+                            {message.parent && (
+                              <div className="bg-blue-100 py-1 px-3 rounded-lg max-w-xs shadow-md mb-2 -mx-3">
+                                <p
+                                  className="text-gray-700 text-sm"
+                                  dangerouslySetInnerHTML={{
+                                    __html: message.parent.content.replace(
+                                      /\n/g,
+                                      "<br>"
+                                    ),
+                                  }}
+                                ></p>
+                                <small className="text-gray-500 block mt-1 text-right">
+                                  {new Date(
+                                    message.parent.timestamp
+                                  ).toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                  })}
+                                </small>
+                              </div>
+                            )}
+
+                            <p
+                              dangerouslySetInnerHTML={{
+                                __html: message.content.replace(/\n/g, "<br>"),
+                              }}
+                            ></p>
+
+                            <small className="text-gray-500 block mt-1 text-left">
+                              {timeString}
+                            </small>
+                          </div>
+                          <div
+                            className="absolute bottom-5 left-0  m-2 hover:opacity-50"
+                            onClick={() => {
+                              replyToSender(
+                                message.id,
+                                message.content,
+                                timeString
+                              );
+                            }}
+                          >
+                            <CgCornerUpLeft />
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                  {message.sender.id == userId &&
+                    message.recipient.id == chatUserId && (
+                      <div className="flex justify-end p-2 relative pr-8">
+                        <div className="bg-blue-100 py-1 px-3 rounded-lg max-w-xs shadow-md">
                           {message.parent && (
-                            <div className="bg-blue-100 py-1 px-3 rounded-lg max-w-xs shadow-md mb-2 -mx-3">
+                            <div
+                              className={`${
+                                message.sender.id !== message.parent.sender.id
+                                  ? "bg-green-100 -mx-3"
+                                  : "bg-blue-100 border border-gray-300"
+                              } py-1 px-3 rounded-lg max-w-xs shadow-md mb-2 -mx-3`}
+                            >
                               <p
                                 className="text-gray-700 text-sm"
                                 dangerouslySetInnerHTML={{
@@ -218,82 +316,24 @@ const ChatMessages = (props) => {
                             }}
                           ></p>
 
-                          <small className="text-gray-500 block mt-1 text-left">
+                          <small className="text-gray-500 block mt-1 text-right">
                             {timeString}
                           </small>
                         </div>
                         <div
-                          className="absolute bottom-5 left-0  m-2 hover:opacity-50"
+                          className="absolute bottom-5 right-0 m-2 hover:opacity-50"
                           onClick={() => {
-                            replyToSender(
+                            replyToRecipient(
                               message.id,
                               message.content,
                               timeString
                             );
                           }}
                         >
-                          <CgCornerUpLeft />
+                          <CgCornerUpRight />
                         </div>
                       </div>
-                    </>
-                  )}
-
-                  {message.sender.id == userId && (
-                    <div className="flex justify-end p-2 relative pr-8">
-                      <div className="bg-blue-100 py-1 px-3 rounded-lg max-w-xs shadow-md">
-                        {message.parent && (
-                          <div
-                            className={`${
-                              message.sender.id !== message.parent.sender.id
-                                ? "bg-green-100 -mx-3"
-                                : "bg-blue-100 border border-gray-300"
-                            } py-1 px-3 rounded-lg max-w-xs shadow-md mb-2 -mx-3`}
-                          >
-                            <p
-                              className="text-gray-700 text-sm"
-                              dangerouslySetInnerHTML={{
-                                __html: message.parent.content.replace(
-                                  /\n/g,
-                                  "<br>"
-                                ),
-                              }}
-                            ></p>
-                            <small className="text-gray-500 block mt-1 text-right">
-                              {new Date(
-                                message.parent.timestamp
-                              ).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                hour12: true,
-                              })}
-                            </small>
-                          </div>
-                        )}
-
-                        <p
-                          dangerouslySetInnerHTML={{
-                            __html: message.content.replace(/\n/g, "<br>"),
-                          }}
-                        ></p>
-
-                        <small className="text-gray-500 block mt-1 text-right">
-                          {timeString}
-                        </small>
-                      </div>
-                      <div
-                        className="absolute bottom-5 right-0 m-2 hover:opacity-50"
-                        onClick={() => {
-                          replyToRecipient(
-                            message.id,
-                            message.content,
-                            timeString
-                          );
-                        }}
-                      >
-                        <CgCornerUpRight />
-                      </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               );
             })}

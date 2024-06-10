@@ -31,6 +31,7 @@ class customUserType(DjangoObjectType):
         fields = ("id","username","mobile_no","first_name","last_name","email")
 
 
+
 class Query(graphene.ObjectType):
 
     user = graphene.Field(customUserType,user_id=graphene.Int())
@@ -46,6 +47,7 @@ class Query(graphene.ObjectType):
         chat_user = customUser.objects.get(id=chat_user_id)
         your_user = customUser.objects.get(id=your_user_id)
         messages = Message.objects.filter(Q(Q(sender=chat_user) & Q(recipient=your_user)) | Q(Q(sender=your_user) & Q(recipient=chat_user))).order_by('timestamp')
+        messages.update(is_read=True)
         info.context.chat_user_id = chat_user_id
         return messages
     

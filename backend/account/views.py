@@ -65,10 +65,10 @@ class RegisterView(APIView):
             try:                    
                 serializer.is_valid(raise_exception=True) 
             except ValidationError as e:
-                print(e)
+                print(e)            
             user = serializer.save()  
             login(request,user)
-            jwt_token = generate_jwt_token(user.id)               
+            jwt_token = generate_jwt_token(user.id)  
             return JsonResponse({'jwt_token': jwt_token})            
         raise AuthenticationFailed('Registration failed')
     
@@ -80,7 +80,7 @@ class LoginView(APIView):
             raise UserNotFoundException()
         if userInstance and userInstance.check_password(request.data["password"]):   
             login(request,userInstance)                     
-            jwt_token = generate_jwt_token(userInstance.id)                
+            jwt_token = generate_jwt_token(userInstance.id)                            
             return HttpResponse(jwt_token)
         raise PasswordMismatchException()
         

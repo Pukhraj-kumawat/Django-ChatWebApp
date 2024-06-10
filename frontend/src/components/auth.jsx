@@ -40,6 +40,7 @@ const handleSubmit = async (e) => {
       const cookieValue = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
       return cookieValue ? cookieValue.pop() : '';
     };
+
     try {
       axios.defaults.withCredentials = true;
       
@@ -65,7 +66,9 @@ const handleSubmit = async (e) => {
         }
       )
 
-      localStorage.setItem('jwt_token', response.data);
+      console.log('jwt token',response.data);
+
+      localStorage.setItem('jwt_token', response.data.jwt_token);
 
       axios.defaults.headers.common['Authorization'] = `Bearer ${response.data}`;
 
@@ -80,6 +83,7 @@ const handleSubmit = async (e) => {
       } else if (error.response.status === 401) {
         alert('Password did not match');
       } else {
+        console.log(error);
         alert('An authentication error occurred. Please try again.');
       }
 

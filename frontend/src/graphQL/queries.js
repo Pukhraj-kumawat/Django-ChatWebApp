@@ -73,6 +73,7 @@ export const CREATE_CHAT_MESSAGE = gql`
       }
     ) {      
       message {
+        isRead
         id
         sender {
           id
